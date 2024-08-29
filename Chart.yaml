@@ -1,0 +1,4 @@
+apiVersion: v2
+name: argocd-applications
+version: 0.1.0
+description: Chart for generating ArgoCD Applications
