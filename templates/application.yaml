@@ -1,1 +1,59 @@
+{{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
+{{- $appsMerged := merge (.Values.apps | default (dict) ) (fromYaml $tplApps ) -}}
+---
+{{ range $appKey, $app := $appsMerged }}
+  {{- if ne $app nil }}
+    {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
+    
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $.Values.base.prefix_name_application | default "" }}{{ $app.metadata.name | default $appKey }}
+  namespace: {{ $app.metadata.namespace | default $.Values.base.namespace | default "default" }}
+  annotations:
+    {{- $app.metadata.annotations | default (dict) | toYaml | nindent 4 }}
+  labels:
+    {{- $app.metadata.labels | default (dict) | toYaml | nindent 4 }}
+{{- if $app.force }}
+operation:
+  sync:
+    syncStrategy:
+      hook:
+        force: true
+{{- end }}
+spec:
+  ignoreDifferences:
+    {{- $app.spec.ignoreDifferences | default $.Values.base.ignoreDifferences | default (dict) | toYaml | nindent 4 }}
+  sources:
+    {{- range $sources := $app.spec.sources }}
+    - repoURL: {{ $sources.repoURL | default $.Values.base.repoURL }}
+      path: {{ $sources.path | default "." }}
+      targetRevision: {{ $sources.targetRevision | default $.Values.base.targetRevision | default "HEAD" }}
+      plugin:
+        {{- $sources.plugin | default (dict) | toYaml | nindent 8 }}
+      helm:
+        valueFiles:
+          {{- $valueFiles := default (list) $sources.helm.valueFiles -}}
+          {{- $overValueFiles := default (list) $sources.helm.overValueFiles -}}
+          {{- $allValueFiles := append $valueFiles $overValueFiles -}}
+          {{- $allValueFiles | toYaml | nindent 10 }}
+        values: |
+          {{- tpl ( $sources.helm.values | default "" | toString ) $ | nindent 10 }}
+        valuesObject:
+          {{- $sources.helm.valuesObject | default (dict) | toYaml | nindent 10 }}
+        parameters:
+          {{- $sources.helm.parameters | default (dict) | toYaml | nindent 10 }}
+      ref: {{- $sources.ref | default "" }}   
+    {{- end }}
+  project: {{ $app.metadata.namespace | default $.Values.base.project | default "default" }}
+  destination:
+    name: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "name")}}{{$app.spec.destination.name}}{{- else }}{{ $.Values.base.destination.name }}{{ end }}
+    namespace: {{ with $app.spec.destination }}{{ .namespace | default $.Values.base.destination.namespace }}{{- else }}{{ $.Values.base.destination.namespace | default $app.metadata.name | default $appKey  }}{{- end }}
+  syncPolicy:
+    {{- $defaultSyncPolicy := dict "automated" (dict "prune" true "selfHeal" true) "syncOptions" (list "CreateNamespace=true") }}
+    {{- $app.spec.syncPolicy | default $.Values.base.syncPolicy | default $defaultSyncPolicy | toYaml | nindent 4 }}
 
+    {{- end }}
+  {{- end }}
+{{- end }}
