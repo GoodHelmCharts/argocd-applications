@@ -54,6 +54,6 @@ spec:
     {{- $defaultSyncPolicy := dict "automated" (dict "prune" true "selfHeal" true) "syncOptions" (list "CreateNamespace=true") }}
     {{- $app.spec.syncPolicy | default $.Values.base.spec.syncPolicy | default $defaultSyncPolicy | toYaml | nindent 4 }}
 
-    {{- end }}
+
   {{- end }}
 {{- end }}
