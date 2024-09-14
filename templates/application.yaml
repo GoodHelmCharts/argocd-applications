@@ -27,7 +27,7 @@ spec:
     {{- $app.spec.ignoreDifferences | default $.Values.base.spec.ignoreDifferences | default (dict) | toYaml | nindent 4 }}
   sources:
     {{- range $sources := $app.spec.sources }}
-    - repoURL: {{ $sources.repoURL | default $.Values.base.sources.repoURL }}
+    - repoURL: {{ $sources.repoURL  }}
       path: {{ $sources.path | default "." }}
       targetRevision: {{ $sources.targetRevision | default $.Values.base.sources.targetRevision | default "HEAD" }}
       plugin:
