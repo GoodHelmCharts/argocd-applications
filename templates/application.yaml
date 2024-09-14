@@ -12,9 +12,9 @@ metadata:
   name: {{ $.Values.base.prefix_name_application | default "" }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name}}{{- else }}{{ $appKey }}{{ end }}
   namespace: {{ if (hasKey $app "metadata") }}{{$app.metadata.namespace}}{{- else }}{{ default $.Values.base.metadata.namespace | default "argocd" }}{{ end }}
   annotations:
-    {{- $app.metadata.annotations | default (dict) | toYaml | nindent 4 }}
+    {{ if (hasKey $app "metadata") }}{{- $app.metadata.annotations | default (dict) | toYaml | nindent 4 }}{{- else }}{{ default (dict) | toYaml | nindent 4  }}{{ end }} 
   labels:
-    {{- $app.metadata.labels | default (dict) | toYaml | nindent 4 }}
+    {{ if (hasKey $app "metadata") }}{{- $app.metadata.labels | default (dict) | toYaml | nindent 4 }}{{- else }}{{ default (dict) | toYaml | nindent 4  }}{{ end }} 
 {{- if $app.force }}
 operation:
   sync:
