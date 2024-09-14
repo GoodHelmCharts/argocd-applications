@@ -45,7 +45,7 @@ spec:
           {{- $sources.helm.parameters | default (dict) | toYaml | nindent 10 }}
       ref: {{- $sources.ref | default "" }}   
     {{- end }}
-  project: {{ if (hasKey $app "metadata") }}{{ $app.metadata.project}}{{- else }}{{ $.Values.base.spec.project | default "default" }}{{ end }} 
+  project: {{ if (hasKey $app "metadata") }}{{ $app.metadata.project}}{{- else }}{{ $.Values.base.spec.project | default "default" }}{{ end }}
   destination:
     name: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "name")}}{{$app.spec.destination.name}}{{- else }}{{ $.Values.base.spec.destination.name }}{{ end }}
     namespace: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "namespace")}}{{$app.spec.destination.namespace}}{{- else }}{{ if and (hasKey $.Values.base.spec "destination") (hasKey $.Values.base.spec.destination "namespace")}}{{ $.Values.base.spec.destination.namespace }}{{- else }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name}}{{- else }}{{ $appKey }}{{ end }}{{ end }}{{ end }}
