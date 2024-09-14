@@ -4,7 +4,6 @@
 {{ range $appKey, $app := $appsMerged }}
   {{- if ne $app nil }}
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
-    
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: Application
@@ -53,7 +52,7 @@ spec:
   syncPolicy:
     {{- $defaultSyncPolicy := dict "automated" (dict "prune" true "selfHeal" true) "syncOptions" (list "CreateNamespace=true") }}
     {{- $app.spec.syncPolicy | default $.Values.base.spec.syncPolicy | default $defaultSyncPolicy | toYaml | nindent 4 }}
-
-
+    
+    {{- end }}
   {{- end }}
 {{- end }}
