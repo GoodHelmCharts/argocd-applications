@@ -42,7 +42,7 @@ spec:
         valuesObject:
           {{- $sources.helm.valuesObject | default (dict) | toYaml | nindent 10 }}
         parameters:
-          {{- $sources.helm.parameters | default (dict) | toYaml | nindent 10 }}
+          {{- $sources.helm.parameters | default (list) | toYaml | nindent 10 }}
       ref: {{ $sources.ref | default "null" }}   
     {{- end }}
   project: {{ if (hasKey $app "metadata") }}{{ $app.metadata.project}}{{- else }}{{ $.Values.base.spec.project | default "default" }}{{ end }}
