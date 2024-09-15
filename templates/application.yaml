@@ -38,9 +38,9 @@ spec:
         values: |
           {{- tpl ( $sources.helm.values | default "" | toString ) $ | nindent 10 }}
         valuesObject:
-          {{- $sources.helm.valuesObject | default (dict) | toYaml | nindent 10 }}
+          {{- $sources.helm.valuesObject | toYaml | nindent 10 }}
         parameters:
-          {{- $sources.helm.parameters | default (list) | toYaml | nindent 10 }}
+          {{- $sources.helm.parameters | toYaml | nindent 10 }}
       ref: {{ $sources.ref | default "null" }}   
     {{- end }}
   project: {{ if (hasKey $app "metadata") }}{{ $app.metadata.project}}{{- else }}{{ $.Values.base.spec.project | default "default" }}{{ end }}
