@@ -34,10 +34,7 @@ spec:
         {{- $sources.plugin  | toYaml | nindent 8 }}
       helm:
         valueFiles:
-          {{- $valueFiles := default (list) $sources.helm.valueFiles -}}
-          {{- $overValueFiles := default (list) $sources.helm.overValueFiles  -}}
-          {{- $allValueFiles := append $valueFiles $overValueFiles | uniq -}}
-          {{- $allValueFiles | toYaml | nindent 10 }}
+          {{- $sources.helm.valueFiles | toYaml | nindent 10 }}
         values: |
           {{- tpl ( $sources.helm.values | default "" | toString ) $ | nindent 10 }}
         valuesObject:
