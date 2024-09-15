@@ -27,7 +27,7 @@ spec:
   sources:
     {{- range $sources := $app.spec.sources }}
     - repoURL: {{ $sources.repoURL  }}
-      path: {{ $sources.path | default "." }}
+      path: {{ $sources.path | default "null" }}
       targetRevision: {{ $sources.targetRevision }}
       plugin:
         {{- $sources.plugin | default (dict) | toYaml | nindent 8 }}
