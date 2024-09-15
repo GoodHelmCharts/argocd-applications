@@ -1,0 +1,87 @@
+apps_values:
+  domain: ".kind.nixos.local"        
+apps:
+  kube-ops-view:
+    spec:
+      sources:
+        - repoURL: 'https://charts.christianhuth.de'
+          chart: kube-ops-view
+          targetRevision: '">0.0.0"'
+          helm:
+            values: |
+              host: &host kube-ops-view{{ $.Values.apps_values.domain }}
+              ingress:
+                enabled: true
+                className: "nginx"
+                labels:
+                  gethomepage.dev/enabled: "true"
+                annotations:
+                  gethomepage.dev/enabled: "true"
+                  nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+                  gethomepage.dev/name: "kube-ops-view"
+                  gethomepage.dev/description: "A modern, secure, highly customizable application dashboard."
+                  # kubernetes.io/ingress.class: nginx
+                  # kubernetes.io/tls-acme: "true"
+                hosts:
+                  - host: *host
+                    paths:
+                      - path: /
+                        pathType: ImplementationSpecific
+  homepage:
+    spec:
+      sources:
+        - repoURL: 'https://jameswynn.github.io/helm-charts'
+          chart: homepage
+          targetRevision: '">0.0.0"' 
+          helm:
+            valueFiles:
+              - values.yaml 
+            values: |
+              host: &host home{{ $.Values.apps_values.domain }}
+              enableRbac: true
+              serviceAccount:
+                create: true      
+              config:
+                widgets:
+                  - resources:
+                      # change backend to 'kubernetes' to use Kubernetes integration. Requires RBAC.
+                      backend: kubernetes
+                      expanded: true
+                      cpu: true
+                      memory: true
+                  - search:
+                      provider: duckduckgo
+                      target: _blank
+                  - kubernetes:
+                      cluster:
+                        show: true
+                        cpu: true
+                        memory: true
+                        showLabel: true
+                        label: "cluster"
+                      nodes:
+                        show: true
+                        cpu: true
+                        memory: true
+                        showLabel: true   
+                kubernetes:
+                  mode: cluster                           
+              ingress:
+                main:
+                  enabled: true
+                  labels:
+                    gethomepage.dev/enabled: "true"
+                  annotations:
+                    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+                    gethomepage.dev/name: "HomepageCUSTOM"
+                    gethomepage.dev/description: "A modern, secure, highly customizable application dashboard."
+                  ingressClassName: "nginx"
+                  hosts:
+                    - host: *host
+                      paths:
+                        - path: /
+                          pathType: Prefix
+
+
+
+ 

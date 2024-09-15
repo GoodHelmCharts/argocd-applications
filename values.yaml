@@ -1,7 +1,6 @@
 base:
   metadata:
     namespace: argocd
-    annotations: null
   spec:
     project: default
     destination:
