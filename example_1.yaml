@@ -36,6 +36,7 @@ apps:
           helm:
             valueFiles:
               - values.yaml 
+              - values2.yaml 
             values: |
               host: &host home{{ $.Values.apps_values.domain }}
               enableRbac: true

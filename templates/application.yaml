@@ -34,7 +34,7 @@ spec:
       helm:
         valueFiles:
           {{- $valueFiles := default (list) $sources.helm.valueFiles -}}
-          {{- $overValueFiles := default (list) $sources.helm.overValueFiles -}}
+          {{- $overValueFiles := $sources.helm.overValueFiles | default "" -}}
           {{- $allValueFiles := append $valueFiles $overValueFiles | uniq -}}
           {{- $allValueFiles | toYaml | nindent 10 }}
         values: |
