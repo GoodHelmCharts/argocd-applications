@@ -23,7 +23,7 @@ operation:
 {{- end }}
 spec:
   ignoreDifferences:
-    {{- $app.spec.ignoreDifferences | default $.Values.base.spec.ignoreDifferences | default (dict) | toYaml | nindent 4 }}
+    {{- $app.spec.ignoreDifferences | default $.Values.base.spec.ignoreDifferences | default (list) | toYaml | nindent 4 }}
   sources:
     {{- range $sources := $app.spec.sources }}
     - repoURL: {{ $sources.repoURL  }}
@@ -35,7 +35,7 @@ spec:
         valueFiles:
           {{- $valueFiles := default (list) $sources.helm.valueFiles -}}
           {{- $overValueFiles := default (list) $sources.helm.overValueFiles -}}
-          {{- $allValueFiles := append $valueFiles $overValueFiles -}}
+          {{- $allValueFiles := append $valueFiles $overValueFiles | uniq -}}
           {{- $allValueFiles | toYaml | nindent 10 }}
         values: |
           {{- tpl ( $sources.helm.values | default "" | toString ) $ | nindent 10 }}
