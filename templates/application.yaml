@@ -31,7 +31,7 @@ spec:
       chart: {{ $sources.chart | default "null" }}
       targetRevision: {{ $sources.targetRevision }}
       plugin:
-        {{- $sources.plugin | default (dict) | toYaml | nindent 8 }}
+        {{- $sources.plugin  | toYaml | nindent 8 }}
       helm:
         valueFiles:
           {{- $valueFiles := default (list) $sources.helm.valueFiles -}}
