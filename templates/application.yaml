@@ -45,7 +45,7 @@ spec:
       {{- end }}
       ref: {{ $sources.ref | default "null" }}   
     {{- end }}
-  project: {{ if (hasKey $app "metadata") }}{{ $app.metadata.project}}{{- else }}{{ $.Values.base.spec.project | default "default" }}{{ end }}
+  project:  {{ $app.spec.project | default ($.Values.base.spec.project) | default ("default") }}
   destination:
     server: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "server")}}{{$app.spec.destination.server}}{{- else }}{{ $.Values.base.spec.destination.server }}{{ end }}
     namespace: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "namespace")}}{{$app.spec.destination.namespace}}{{- else }}{{ if and (hasKey $.Values.base.spec "destination") (hasKey $.Values.base.spec.destination "namespace")}}{{ $.Values.base.spec.destination.namespace }}{{- else }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name}}{{- else }}{{ $appKey }}{{ end }}{{ end }}{{ end }}
