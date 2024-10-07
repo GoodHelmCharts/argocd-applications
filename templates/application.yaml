@@ -8,7 +8,7 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ $.Values.base.prefix_name_application | default "" }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name}}{{- else }}{{ $appKey }}{{ end }}
+  name: {{ $.Values.base.prefix_name_application | default "" }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name | default ($appKey) }}{{- else }}{{ $appKey }}{{ end }}
   namespace: {{ if (hasKey $app "metadata") }}{{$app.metadata.namespace}}{{- else }}{{ default $.Values.base.metadata.namespace | default "argocd" }}{{ end }}
   annotations:
     {{- if (hasKey $app "metadata") }}{{- $app.metadata.annotations | default (dict) | toYaml | nindent 4 }}{{- else }}{{ dict | toYaml | nindent 4  }}{{ end }} 
