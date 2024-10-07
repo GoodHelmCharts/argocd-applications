@@ -34,7 +34,7 @@ spec:
         {{- $sources.plugin  | toYaml | nindent 8 }}
       helm:
         valueFiles:
-          {{- $sources.helm.valueFiles | toYaml | nindent 10 }}
+          {{- $sources.helm.valueFiles | default (list) | toYaml | nindent 10 }}
         values: |
           {{- tpl ( $sources.helm.values | default "" | toString ) $ | nindent 10 }}
         valuesObject:
