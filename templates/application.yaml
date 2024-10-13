@@ -1,3 +1,15 @@
+{{- $tplObjects := ( tpl (.Values.objects_tpl_string | default "null" ) .)  -}}
+{{- $objectsMerged := merge (.Values.objects | default (dict) ) (fromYaml $tplObjects ) -}}
+{{ range $objectKey, $object := $objectsMerged }}
+  {{- if ne $object nil }}
+    {{- if or (not $object.condition) (and $object.condition (eq "true" (tpl (printf "{{%s}}" $object.condition) $))) }}
+---
+{{ $object | toYaml }}
+
+    {{- end }}
+  {{- end }}
+{{- end }}
+
 {{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
 {{- $appsMerged := merge (.Values.apps | default (dict) ) (fromYaml $tplApps ) -}}
 
