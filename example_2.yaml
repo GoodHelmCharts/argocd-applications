@@ -1,0 +1,12 @@
+objects_tpl_string: |
+  authsecret:
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: authsecret
+      namespace: {{ .Values.toto | default "argocd-infra" }}
+    data:
+      users: |
+        NnVza2trVyRJZ1hMUDZld1RyU3VCa1Ry5
+        EJCJDRIeHdnVWlyM0hQNEVzZ2dQL1FO
+
