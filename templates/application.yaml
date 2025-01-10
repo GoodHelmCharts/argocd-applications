@@ -1,3 +1,4 @@
+{{ .Values.k8s_yaml | default (dict) | toYaml }}
 {{- $tplObjects := ( tpl (.Values.objects_tpl_string | default "null" ) .)  -}}
 {{- $objectsMerged := merge (.Values.objects | default (dict) ) (fromYaml $tplObjects ) -}}
 {{ range $objectKey, $object := $objectsMerged }}
