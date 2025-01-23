@@ -1,20 +1,29 @@
-{{- .Values.k8s_yaml | default ""  }}
+{{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
 
-{{- $tplObjects := ( tpl (.Values.objects_tpl_string | default "null" ) .)  }}
-{{- $objectsMerged := merge (.Values.objects | default (dict) ) (fromYaml $tplObjects ) -}}
-{{ range $objectKey, $object := $objectsMerged }}
-  {{- if ne $object nil }}
-    {{- if or (not $object.condition) (and $object.condition (eq "true" (tpl (printf "{{%s}}" $object.condition) $))) }}
----
-{{ $object | toYaml }}
-
-    {{- end }}
+{{ $appsDictTpl := dict }}
+{{- range $parentKey, $dict := .Values.apps_dict_tpl }}
+  {{ $newApps := dict }}
+  {{- range $subKey, $subValue := $dict }}
+    {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
+    {{ $newApps = merge $newApps (dict $hashedKey $subValue) }}
   {{- end }}
+  {{ $appsDictTpl = merge $appsDictTpl $newApps }}
 {{- end }}
 
-{{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
-{{- $appsMerged := merge (.Values.apps | default (dict) ) (fromYaml $tplApps ) -}}
 
+{{ $appsDict := dict }}
+{{- range $parentKey, $dict := .Values.apps_dict }}
+  {{ $newApps := dict }}
+  {{- range $subKey, $subValue := $dict }}
+    {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
+    {{ $newApps = merge $newApps (dict $hashedKey $subValue) }}
+  {{- end }}
+  {{ $appsDict = merge $appsDict $newApps }}
+{{- end }}
+
+
+
+{{- $appsMerged := merge (.Values.apps | default (dict) ) ($appsDict) (fromYaml $tplApps ) ($appsDictTpl )  -}}
 {{ range $appKey, $app := $appsMerged }}
   {{- if ne $app nil }}
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
