@@ -50,6 +50,7 @@ operation:
 spec:
   ignoreDifferences:
     {{- $app.spec.ignoreDifferences | default $.Values.base.spec.ignoreDifferences | default (list) | toYaml | nindent 4 }}
+  {{- if $app.spec.source }} 
   source:
     {{- $source := $app.spec.source }}
     repoURL: {{ tpl $source.repoURL $  }}
@@ -70,7 +71,7 @@ spec:
         {{- $source.helm.parameters | toYaml | nindent 10 }}
     {{- end }}
     ref: {{ $source.ref | default "null" }}   
-
+  {{- end }} 
   {{- if $app.spec.sources }}  
   sources:
     {{- range $sources := $app.spec.sources }}
