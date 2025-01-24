@@ -1,0 +1,33 @@
+apps_dict_tpl_string: 
+  git@github.com/ThomasInfras/argocd-template/argocd-apps:
+    k8s-argocd-apps: |
+      metadata:
+        namespace: totttt       
+      spec:
+        destination: 
+          namespace: argocd            
+        sources:
+          - repoURL: xxxxxx
+            targetRevision: {{ default "COOOOL" }}
+            path: k8s-argocd-apps
+    k8s-argocd-apps2: |
+      metadata:
+        namespace: tottttOOOOOOOOOOOOOOOOOO     
+      spec:
+        destination: 
+          namespace: argocd            
+        sources:
+          - repoURL: xxxxxx
+            targetRevision: {{ default "COOOOL" }}
+            path: k8s-argocd-apps            
+  git@github.com/ThomasInfras/argocd-template/argocd-apps2: 
+    k8s-argocd-apps: |
+      metadata:
+        namespace: argocd-TEST         
+      spec:
+        destination: 
+          namespace: argocd            
+        sources:
+          - repoURL: xxxxxx
+            targetRevision: HEAD
+            path: k8s-argocd-apps            

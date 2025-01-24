@@ -1,0 +1,17 @@
+apps_values:
+  repoURL: "ssh://git@github.com/ThomasInfras/k8s-automated-ovh"
+  git@github.com/ThomasInfras/argocd-template/argocd-apps:
+    domain: ".site.com"
+    repoURL: "ssh://git@github.com/ThomasInfras/k8s-automated-ovh"
+apps_dict_tpl:
+  git@github.com/ThomasInfras/argocd-template/argocd-apps:
+    k8s-argocd-apps:
+      metadata:
+        namespace: argocd          
+      spec:
+        destination: 
+          namespace: argocd            
+        sources:
+          - repoURL: toto
+            targetRevision: HEAD
+            path: k8s-argocd-apps
