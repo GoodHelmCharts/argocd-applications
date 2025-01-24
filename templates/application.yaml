@@ -1,11 +1,14 @@
 {{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
 
+
 {{ $appsDictTpl := dict }}
 {{- range $parentKey, $dict := .Values.apps_dict_tpl }}
   {{ $newApps := dict }}
   {{- range $subKey, $subValue := $dict }}
     {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
     {{ $newApps = merge $newApps (dict $hashedKey $subValue) }}
+    
+
   {{- end }}
   {{ $appsDictTpl = merge $appsDictTpl $newApps }}
 {{- end }}
@@ -47,6 +50,28 @@ operation:
 spec:
   ignoreDifferences:
     {{- $app.spec.ignoreDifferences | default $.Values.base.spec.ignoreDifferences | default (list) | toYaml | nindent 4 }}
+  source:
+    {{- $source := $app.spec.source }}
+    repoURL: {{ tpl $source.repoURL $  }}
+    path: {{ $source.path | default "null" }}
+    chart: {{ tpl ($source.chart| default "null") $ }}
+    targetRevision: {{ tpl $source.targetRevision $ }}
+    plugin:
+      {{- $source.plugin  | toYaml | nindent 8 }}
+    {{- if $source.helm }}
+    helm:
+      valueFiles:
+        {{- $source.helm.valueFiles | default (list) | toYaml | nindent 10 }}
+      values: |
+        {{- tpl ( $source.helm.values | default "" | toString ) $ | nindent 10 }}
+      valuesObject:
+        {{- tpl (toYaml $source.helm.valuesObject ) $ | nindent 10 }}
+      parameters:
+        {{- $source.helm.parameters | toYaml | nindent 10 }}
+    {{- end }}
+    ref: {{ $source.ref | default "null" }}   
+
+    
   sources:
     {{- range $sources := $app.spec.sources }}
     - repoURL: {{ tpl $sources.repoURL $  }}
