@@ -71,7 +71,7 @@ spec:
     {{- end }}
     ref: {{ $source.ref | default "null" }}   
 
-    
+  {{- if $app.spec.sources }}  
   sources:
     {{- range $sources := $app.spec.sources }}
     - repoURL: {{ tpl $sources.repoURL $  }}
@@ -93,6 +93,7 @@ spec:
       {{- end }}
       ref: {{ $sources.ref | default "null" }}   
     {{- end }}
+  {{- end }} 
   project:  {{ $app.spec.project | default ($.Values.base.spec.project) | default ("default") }}
   destination:
     server: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "server")}}{{$app.spec.destination.server}}{{- else }}{{ $.Values.base.spec.destination.server }}{{ end }}
