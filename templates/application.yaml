@@ -49,7 +49,7 @@ spec:
     {{- $app.spec.ignoreDifferences | default $.Values.base.spec.ignoreDifferences | default (list) | toYaml | nindent 4 }}
   sources:
     {{- range $sources := $app.spec.sources }}
-    - repoURL: {{ $sources.repoURL  }}
+    - repoURL: {{ tpl $sources.repoURL $  }}
       path: {{ $sources.path | default "null" }}
       chart: {{ $sources.chart | default "null" }}
       targetRevision: {{ $sources.targetRevision }}
