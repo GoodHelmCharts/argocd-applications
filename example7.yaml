@@ -1,12 +1,12 @@
 apps_values:
-  git@github.com/ThomasInfras/argocd-template/argocd-simple_tpl:
-    domain: ".site.com"
+  git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple:
+    domain: "nixos.local"
     adminArgo: ""
     ingressClassName: "nginx"
-    targetRevision: '">0.0.0"'
+    targetRevision: '">0.0.0"' 
 
 apps_dict_tpl:
-  git@github.com/ThomasInfras/argocd-template/argocd-simple:
+  git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple:
     argocd:
       metadata:
         namespace: argocd-infra
@@ -17,19 +17,19 @@ apps_dict_tpl:
         source:
           repoURL: 'https://argoproj.github.io/argo-helm'
           chart: argo-cd
-          targetRevision: '{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd-simple_tpl" "targetRevision" }}'
+          targetRevision: '{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple" "targetRevision" }}'
           helm:
             valuesObject:
               configs:
                 cm:
                   application.instanceLabelKey: argocd.argoproj.io/instance-argocd
                 #secret:
-                  #argocdServerAdminPassword: {{  htpasswd "admin" (derivePassword 1 "long" ((lookup "v1" "Secret" "argocd-infra" "private-repo").data.sshPrivateKey | sha256sum )  "admin" "argo.local"  )   }}
+                  #argocdServerAdminPassword: {  htpasswd "admin" (derivePassword 1 "long" ((lookup "v1" "Secret" "argocd-infra" "private-repo").data.sshPrivateKey | sha256sum )  "admin" "argo.local"  )   }
               global:
-                domain: argocd{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd-simple_tpl" "domain" }}
+                domain: argocd{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple" "domain" }}
               server:
                 ingress:
-                  ingressClassName: '{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd-simple_tpl" "ingressClassName" }}'
+                  ingressClassName: '{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple" "ingressClassName" }}'
                   enabled: true
                   annotations:
                     nginx.ingress.kubernetes.io/auth-type: basic
