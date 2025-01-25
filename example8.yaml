@@ -1,0 +1,16 @@
+apps_values:
+  git@github.com/ThomasInfras/argocd-template/argocd/argocd-apps:
+    repoURL: "https://github.com/ThomasInfras/k8s-automated-kind" 
+    path: k8s-argocd-apps
+apps_dict_tpl:
+  git@github.com/ThomasInfras/argocd-template/argocd/argocd-apps:
+    k8s-argocd-apps:
+      metadata:
+        namespace: argocd          
+      spec:
+        destination: 
+          namespace: argocd            
+        source:
+          repoURL: '{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd/argocd-apps" "repoURL" }}'
+          targetRevision: HEAD
+          path: '{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd/argocd-apps" "path" }}'

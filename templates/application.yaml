@@ -54,7 +54,7 @@ spec:
   source:
     {{- $source := $app.spec.source }}
     repoURL: {{ tpl $source.repoURL $  }}
-    path: {{ $source.path | default "null" }}
+    path: {{ tpl ($source.path| default "null") $ }}
     chart: {{ tpl ($source.chart| default "null") $ }}
     targetRevision: {{ tpl $source.targetRevision $ }}
     plugin:
