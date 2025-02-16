@@ -6,7 +6,7 @@
   {{ $newApps := dict }}
   {{- range $subKey, $subValue := $dict }}
     {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
-    {{- if $.Values.apps_dict_tpl_no_gen_id }}
+    {{- if $.Values.apps_dict_tpl_no_gen_id | $dict.no_gen_id }}
     {{ $hashedKey := printf "%s" $subKey }}
     {{- end }}
     {{ $newApps = merge $newApps (dict $hashedKey $subValue) }}
