@@ -101,7 +101,8 @@ spec:
     namespace: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "namespace")}}{{$app.spec.destination.namespace}}{{- else }}{{ if and (hasKey $.Values.base.spec "destination") (hasKey $.Values.base.spec.destination "namespace")}}{{ $.Values.base.spec.destination.namespace }}{{- else }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name}}{{- else }}{{ $appKey }}{{ end }}{{ end }}{{ end }}
   syncPolicy:
     {{- $defaultSyncPolicy := dict "automated" (dict "prune" true "selfHeal" true) "syncOptions" (list "CreateNamespace=true") }}
-    {{- $app.spec.syncPolicy | default $.Values.base.spec.syncPolicy | default $defaultSyncPolicy | toYaml | nindent 4 }}
+    {{- $SyncPolicy := merge $defaultSyncPolicy ($app.spec.syncPolicy | default $.Values.base.spec.syncPolicy | default (dict) )  }}
+    {{- $SyncPolicy | toYaml | nindent 4 }}
     {{- end }}
   {{- end }}
 {{- end }}
