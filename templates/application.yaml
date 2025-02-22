@@ -5,9 +5,9 @@
 {{- range $parentKey, $dict := .Values.apps_dict_tpl }}
   {{ $newApps := dict }}
   {{- range $subKey, $subValue := $dict }}
-    {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
-    {{- if or $.Values.apps_dict_tpl_no_gen_id  $subValue.no_gen_id }}
     {{ $hashedKey := printf "%s" $subKey }}
+    {{- if or $.Values.apps_dict_tpl_gen_id  $subValue.gen_id }}
+    {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
     {{- end }}
     {{ $newApps = merge $newApps (dict $hashedKey $subValue) }}
     
@@ -21,7 +21,10 @@
 {{- range $parentKey, $dict := .Values.apps_dict }}
   {{ $newApps := dict }}
   {{- range $subKey, $subValue := $dict }}
+    {{- if or $.Values.apps_dict_tpl_gen_id  $subValue.gen_id }}
     {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
+    {{- end }}
+    {{ $hashedKey := printf "%s" $subKey }}
     {{ $newApps = merge $newApps (dict $hashedKey $subValue) }}
   {{- end }}
   {{ $appsDict = merge $appsDict $newApps }}
