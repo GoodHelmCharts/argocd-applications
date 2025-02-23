@@ -1,5 +1,40 @@
-{{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
+{{ define "Application" -}}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ print ( $.Values.base.prefix_name_application | default "" .appKey ) }}
+  namespace: {{ $.Values.base.metadata.namespace | default "argocd"  }}
+  project: {{ $.Values.base.spec.project | default ("default") }}
+{{ if .app.force}}
+operation:
+  sync:
+    syncStrategy:
+      hook:
+        force: true
+{{- end }}
+spec:
+  destination:
+    server: {{ $.Values.base.spec.destination.server | default ("https://kubernetes.default.svc")  }}
+    namespace: {{ $.Values.base.spec "destination" | default .app.metadata.name | default .appKey}}
 
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - "CreateNamespace=true"
+{{- if .app.spec.source.helm.valuesObject -}}
+  source:
+    helm:
+      valuesObjectsZ:
+        {{- tpl (toYaml .app.spec.source.helm.valuesObject ) $ | nindent 10 }}
+        
+{{ end}}
+
+
+
+
+{{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
 
 {{ $appsDictTpl := dict }}
 {{- range $parentKey, $dict := .Values.apps_dict_tpl }}
@@ -37,75 +72,9 @@
   {{- if ne $app nil }}
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
-{{- $root := dict "apiVersion" ("argoproj.io/v1alpha1") "kind" (list "Application") }}
-{{- $apiVersion := dict "apiVersion" ("argoproj.io/v1alpha1") }}
-{{- $kind :=  dict "kind" ("Application") }}
-metadata:
-  {{- $name := dict "name" (print  ($.Values.base.prefix_name_application | default "") $appKey ) }}
-  {{- $namespace := dict "namespace" ($.Values.base.metadata.namespace | default "argocd" )  }}
-
-{{- if $app.force }}
-{{- $operation := dict "sync" (dict "syncStrategy" (dict "hook" (dict "force" true) ) )  }}
-{{- merge $defaultDict $app.force }}
-{{- fi $app.force }}
-
-
-spec:
-  ignoreDifferences:
-    {{- $app.spec.ignoreDifferences | default $.Values.base.spec.ignoreDifferences | default (list) | toYaml | nindent 4 }}
-  {{- if $app.spec.source }} 
-  source:
-    {{- $source := $app.spec.source }}
-    repoURL: {{ tpl $source.repoURL $  }}
-    path: {{ tpl ($source.path| default "null") $ }}
-    chart: {{ tpl ($source.chart| default "null") $ }}
-    targetRevision: {{ tpl $source.targetRevision $ }}
-    plugin:
-      {{- $source.plugin  | toYaml | nindent 8 }}
-    {{- if $source.helm }}
-    helm:
-      valueFiles:
-        {{- $source.helm.valueFiles | default (list) | toYaml | nindent 10 }}
-      values: |
-        {{- tpl ( $source.helm.values | default "" | toString ) $ | nindent 10 }}
-      valuesObject:
-        {{- tpl (toYaml $source.helm.valuesObject ) $ | nindent 10 }}
-      parameters:
-        {{- $source.helm.parameters | toYaml | nindent 10 }}
-    {{- end }}
-    ref: {{ $source.ref | default "null" }}   
-  {{- end }} 
-  {{- if $app.spec.sources }}  
-  sources:
-    {{- range $sources := $app.spec.sources }}
-    - repoURL: {{ tpl $sources.repoURL $  }}
-      path: {{ $sources.path | default "null" }}
-      chart: {{ $sources.chart | default "null" }}
-      targetRevision: {{ $sources.targetRevision }}
-      plugin:
-        {{- $sources.plugin  | toYaml | nindent 8 }}
-     {{- if $sources.helm }}
-      helm:
-        valueFiles:
-          {{- $sources.helm.valueFiles | default (list) | toYaml | nindent 10 }}
-        values: |
-          {{- tpl ( $sources.helm.values | default "" | toString ) $ | nindent 10 }}
-        valuesObject:
-          {{- $sources.helm.valuesObject | toYaml | nindent 10 }}
-        parameters:
-          {{- $sources.helm.parameters | toYaml | nindent 10 }}
-      {{- end }}
-      ref: {{ $sources.ref | default "null" }}   
-    {{- end }}
-  {{- end }} 
-  project:  {{ $app.spec.project | default ($.Values.base.spec.project) | default ("default") }}
-  destination:
-    server: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "server")}}{{$app.spec.destination.server}}{{- else }}{{ $.Values.base.spec.destination.server }}{{ end }}
-    namespace: {{ if and (hasKey $app.spec "destination") (hasKey $app.spec.destination "namespace")}}{{$app.spec.destination.namespace}}{{- else }}{{ if and (hasKey $.Values.base.spec "destination") (hasKey $.Values.base.spec.destination "namespace")}}{{ $.Values.base.spec.destination.namespace }}{{- else }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name}}{{- else }}{{ $appKey }}{{ end }}{{ end }}{{ end }}
-  syncPolicy:
-    {{- $defaultSyncPolicy := dict "automated" (dict "prune" true "selfHeal" true) "syncOptions" (list "CreateNamespace=true") }}
-    {{- $SyncPolicy := merge $defaultSyncPolicy ($app.spec.syncPolicy | default $.Values.base.spec.syncPolicy | default (dict) )  }}
-    {{- $SyncPolicy | toYaml | nindent 4 }}
+{{ $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $app ) ) -}}
+{{- $Application := merge $app $Application   -}}
+{{ toYaml $Application }}
     {{- end }}
   {{- end }}
 {{- end }}
