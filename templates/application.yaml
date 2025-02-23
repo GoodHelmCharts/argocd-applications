@@ -37,9 +37,16 @@
   {{- if ne $app nil }}
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+{{- $root := dict "apiVersion" ("argoproj.io/v1alpha1") "kind" (list "Application") }}
+{{- $apiVersion := dict "apiVersion" ("argoproj.io/v1alpha1") }}
+{{- $kind :=  dict "kind" ("Application") }}
 metadata:
+  {{- $name := dict "name" (print  ($.Values.base.prefix_name_application | default "") $appKey ) }}
+  {{- $name := dict "namespace" ($.Values.base.metadata.namespace | default "argocd" )  }}
+
+
+
+
   name: {{ $.Values.base.prefix_name_application | default "" }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name | default ($appKey) }}{{- else }}{{ $appKey }}{{ end }}
   namespace: {{ if (hasKey $app "metadata") }}{{$app.metadata.namespace}}{{- else }}{{ default $.Values.base.metadata.namespace | default "argocd" }}{{ end }}
   annotations:
