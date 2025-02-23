@@ -42,24 +42,14 @@
 {{- $kind :=  dict "kind" ("Application") }}
 metadata:
   {{- $name := dict "name" (print  ($.Values.base.prefix_name_application | default "") $appKey ) }}
-  {{- $name := dict "namespace" ($.Values.base.metadata.namespace | default "argocd" )  }}
+  {{- $namespace := dict "namespace" ($.Values.base.metadata.namespace | default "argocd" )  }}
 
-
-
-
-  name: {{ $.Values.base.prefix_name_application | default "" }}{{ if (hasKey $app "metadata") }}{{$app.metadata.name | default ($appKey) }}{{- else }}{{ $appKey }}{{ end }}
-  namespace: {{ if (hasKey $app "metadata") }}{{$app.metadata.namespace}}{{- else }}{{ default $.Values.base.metadata.namespace | default "argocd" }}{{ end }}
-  annotations:
-    {{- if (hasKey $app "metadata") }}{{- $app.metadata.annotations | default (dict) | toYaml | nindent 4 }}{{- else }}{{ dict | toYaml | nindent 4  }}{{ end }} 
-  labels:
-    {{- if (hasKey $app "metadata") }}{{- $app.metadata.labels | default (dict) | toYaml | nindent 4 }}{{- else }}{{ dict | toYaml | nindent 4  }}{{ end }} 
 {{- if $app.force }}
-operation:
-  sync:
-    syncStrategy:
-      hook:
-        force: true
-{{- end }}
+{{- $operation := dict "sync" (dict "syncStrategy" (dict "hook" (dict "force" true) ) )  }}
+{{- merge $defaultDict $app.force }}
+{{- fi $app.force }}
+
+
 spec:
   ignoreDifferences:
     {{- $app.spec.ignoreDifferences | default $.Values.base.spec.ignoreDifferences | default (list) | toYaml | nindent 4 }}
