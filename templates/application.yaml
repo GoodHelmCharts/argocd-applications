@@ -2,9 +2,9 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: {{ print ( $.Values.base.prefix_name_application | default "" .appKey ) }}
-  namespace: {{ $.Values.base.metadata.namespace | default "argocd"  }}
-  project: {{ $.Values.base.spec.project | default ("default") }}
+  {{ $baseMetadata := (($.Values).base).metadata }}
+  name: {{ print ($baseMetadata.prefix_name | default "" .appKey ) }}
+  namespace: {{ $baseMetadata.namespace | default "argocd"  }}
 {{ if .app.force}}
 operation:
   sync:
@@ -13,25 +13,55 @@ operation:
         force: true
 {{- end }}
 spec:
+  {{ $baseSpec := (($.Values).base).spec }}
+  project: {{ $baseSpec.project | default "default" }}
   destination:
-    server: {{ $.Values.base.spec.destination.server | default ("https://kubernetes.default.svc")  }}
-    namespace: {{ $.Values.base.spec "destination" | default .app.metadata.name | default .appKey}}
-
+    server: {{ ($baseSpec.destination).server | default ("https://kubernetes.default.svc")  }}
+    namespace: {{ ($baseSpec.destination).server | default (.app.metadata).name | default .appKey}}
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - "CreateNamespace=true"
-{{- if .app.spec.source.helm.valuesObject -}}
+        
+{{ end }}
+
+{{ define "ValuesTpl" -}}
+spec:
+  {{ $helm := (((.app).spec).source).helm }}
+  {{- if $helm }}
   source:
     helm:
-      valuesObjectsZ:
-        {{- tpl (toYaml .app.spec.source.helm.valuesObject ) $ | nindent 10 }}
-        
-{{ end}}
+      {{- if $helm.valuesObjects }}
+      valuesObjects:
+        {{- tpl (toYaml $helm.valuesObjects ) $ | nindent 8 }}
+      {{ end}}
+      {{- if $helm.values }}
+      values: |
+        {{- tpl ( $helm.values ) $ | nindent 8 }}
+      {{ end}}
+  {{ end}}
 
 
+  {{- if (((.app).spec).sources) }}
+  sources:
+    {{- range $key, $sources := .app.spec.sources }}
+    {{ $helm := $sources.helm }}
+    {{- if $helm.valuesObjects }}
+    {{ $test := dict "helm" (dict "valuesObjects" (fromYaml (tpl (toYaml $helm.valuesObjects ) .) ) ) }}
+    {{ $sources = merge $test $sources }}
+    {{- end }}
+
+    {{- if $helm.values }}
+    {{ $test := dict "helm" (dict "values"  (tpl ($helm.values ) .) )  }}
+    {{ $sources = merge $test $sources }}
+    {{- end }}
+
+    - {{ toYaml $sources | nindent 6 }}
+    {{ end}}
+  {{ end}}
+{{ end }}
 
 
 {{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
@@ -73,8 +103,10 @@ spec:
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
 {{ $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $app ) ) -}}
-{{- $Application := merge $app $Application   -}}
+{{ $ValuesTpl := fromYaml (include "ValuesTpl" (dict "app" $app ) ) -}}
+{{- $Application := merge $ValuesTpl $app $Application   -}}
 {{ toYaml $Application }}
+
     {{- end }}
   {{- end }}
 {{- end }}
