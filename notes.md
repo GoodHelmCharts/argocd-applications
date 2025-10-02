@@ -56,3 +56,15 @@
     {{- $in -}}
   {{- end -}}
 {{- end }}
+
+
+
+
+{{- if .app.force }}
+operation:
+  sync:
+    syncStrategy:
+      hook:
+        force: true
+{{- $app := .app | omit "force"  }}
+{{- end }}
