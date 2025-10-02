@@ -1,0 +1,45 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: infra-apps
+  namespace: argocd-infra
+spec:
+  ignoreDifferences:
+    - group: argoproj.io
+      kind: Application
+      jsonPointers:
+        - /operation
+  destination:
+    server: 'https://kubernetes.default.svc' 
+    namespace: argocd-infra
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+  project: default
+  sources:
+    - repoURL: 'https://github.com/GoodHelmCharts/argocd-applications.git'
+      path: ./
+      targetRevision: "dev"
+
+      helm:
+        valueFiles:
+          - values.yaml
+          # ARGOCD
+          - $templates/argocd/argocd-simple.yaml
+          - $templates/argocd/argocd-lookup.yaml
+          #- $templates/argocd/argocd-apps.yaml
+        valuesObject:
+          domain: &domain .kind
+          apps_values:
+            argocd:
+              domain: *domain
+            argocd-apps:
+              repoURL: "https://github.com/k8s-cd/kind-framework-12.git"
+
+
+    - repoURL: "https://github.com/GoodInfras/argocd-templates.git"
+      targetRevision: "HEAD"
+      ref: templates

@@ -1,0 +1,55 @@
+apps_values:
+  argocd:
+    domain: ".kind"
+    adminArgo: ""
+    ingressClassName: "nginx"
+    targetRevision: '">0.0.0"' 
+
+apps_dict_tpl:
+  argocd-simple:
+    argocd:
+      metadata:
+        namespace: argocd-infra
+      force: true
+      spec:
+        destination: 
+          namespace: argocd
+        source:
+          repoURL: 'https://argoproj.github.io/argo-helm'
+          chart: argo-cd
+          targetRevision: '{{  index .Values.apps_values "argocd" "targetRevision" }}'
+          helm:
+            valuesObject:
+              configs:
+                cm:
+                  exec.enabled: true
+                  application.instanceLabelKey: argocd.argoproj.io/instance-argocd
+                #secret:
+                  #argocdServerAdminPassword: {  htpasswd "admin" (derivePassword 1 "long" ((lookup "v1" "Secret" "argocd-infra" "private-repo").data.sshPrivateKey | sha256sum )  "admin" "argo.local"  )   }
+              global:
+                domain: argocd{{  index .Values.apps_values "argocd" "domain" }}
+              server:
+                ingress:
+                  ingressClassName: '{{  index .Values.apps_values "argocd" "ingressClassName" }}'
+                  enabled: true
+                  annotations:
+                    #nginx.ingress.kubernetes.io/auth-type: basic
+                    #nginx.ingress.kubernetes.io/auth-secret: basic-auth
+                    #nginx.ingress.kubernetes.io/auth-realm: "Authentication Required - ok"                
+                    gethomepage.dev/enabled: "true"
+                    gethomepage.dev/name: "ARGOCD"
+                    gethomepage.dev/group: "CI/CD"
+                    gethomepage.dev/icon: "https://argo-cd.readthedocs.io/en/stable/assets/logo.png"
+                    gethomepage.dev/pod-selector: "app.kubernetes.io/component=server"
+                    #traefik.ingress.kubernetes.io/router.tls: "true"
+                    #traefik.ingress.kubernetes.io/router.middlewares: argocd-infra-testauth@kubernetescrd
+                    #nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+                    nginx.ingress.kubernetes.io/ssl-redirect: "false"     
+                    nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+                    nginx.ingress.kubernetes.io/hsts: "false"
+                    #nginx.ingress.kubernetes.io/rewrite-target: /
+                    #nginx.ingress.kubernetes.io/secure-backends: "true"
+                    #nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+                    #nginx.ingress.kubernetes.io/auth-tls-verify-client: "off"
+                    #nginx.ingress.kubernetes.io/proxy-ssl-verify: "off"
+                    #nginx.ingress.kubernetes.io/proxy-ssl-verify-depth: 0                    
