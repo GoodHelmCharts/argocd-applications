@@ -1,12 +1,12 @@
 apps_values:
-  git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple:
-    domain: "nixos.local"
+  argocd-simple:
+    domain: ".nixos.local"
     adminArgo: ""
     ingressClassName: "nginx"
     targetRevision: '">0.0.0"' 
 
 apps_dict_tpl:
-  git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple:
+  argocd-simple:
     argocd:
       metadata:
         namespace: argocd-infra
@@ -17,7 +17,7 @@ apps_dict_tpl:
         source:
           repoURL: 'https://argoproj.github.io/argo-helm'
           chart: argo-cd
-          targetRevision: '{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple" "targetRevision" }}'
+          targetRevision: '{{  index .Values.apps_values "argocd-simple" "targetRevision" }}'
           helm:
             valuesObject:
               configs:
@@ -26,10 +26,10 @@ apps_dict_tpl:
                 #secret:
                   #argocdServerAdminPassword: {  htpasswd "admin" (derivePassword 1 "long" ((lookup "v1" "Secret" "argocd-infra" "private-repo").data.sshPrivateKey | sha256sum )  "admin" "argo.local"  )   }
               global:
-                domain: argocd{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple" "domain" }}
+                domain: argocd{{  index .Values.apps_values "argocd-simple" "domain" }}
               server:
                 ingress:
-                  ingressClassName: '{{  index .Values.apps_values "git@github.com/ThomasInfras/argocd-template/argocd/argocd-simple" "ingressClassName" }}'
+                  ingressClassName: '{{  index .Values.apps_values "argocd-simple" "ingressClassName" }}'
                   enabled: true
                   annotations:
                     nginx.ingress.kubernetes.io/auth-type: basic

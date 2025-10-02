@@ -27,19 +27,42 @@ spec:
         
 {{ end }}
 
+{{- /* Fonction récursive pour appliquer tpl sur chaque feuille string */ -}}
+{{- define "tplLeafs" -}}
+  {{- $in := index . 0 -}}
+  {{- $ctx := index . 1 -}}
+  {{- if (kindIs "map" $in) -}}
+    {{- $out := dict -}}
+    {{- range $k, $v := $in -}}
+      {{- $_ := set $out $k (include "tplLeafs" (list $v $ctx)) -}}
+    {{- end -}}
+    {{- $out -}}
+  {{- else if (kindIs "slice" $in) -}}
+    {{- $out := list -}}
+    {{- range $v := $in -}}
+      {{- $out = append $out (include "tplLeafs" (list $v $ctx)) -}}
+    {{- end -}}
+    {{- $out -}}
+  {{- else if (kindIs "string" $in) -}}
+    {{- tpl $in $ctx -}}
+  {{- else -}}
+    {{- $in -}}
+  {{- end -}}
+{{- end }}
+
 {{ define "ValuesTpl" -}}
 spec:
   {{ $helm := (((.app).spec).source).helm }}
   {{- if $helm }}
   source:
     helm:
-      {{- if $helm.valuesObjects }}
-      valuesObjects:
-        {{- tpl (toYaml $helm.valuesObjects ) $ | nindent 8 }}
+      {{- if $helm.valuesObject }}
+      valuesObject:
+        {{- tpl (toYaml $helm.valuesObject ) .root | nindent 8 }}
       {{ end}}
       {{- if $helm.values }}
       values: |
-        {{- tpl ( $helm.values ) $ | nindent 8 }}
+        {{- tpl ( $helm.values ) .root | nindent 8 }}
       {{ end}}
   {{ end}}
 
@@ -49,7 +72,7 @@ spec:
     {{- range $key, $sources := .app.spec.sources }}
     {{ $helm := $sources.helm }}
     {{- if $helm.valuesObjects }}
-    {{ $test := dict "helm" (dict "valuesObjects" (fromYaml (tpl (toYaml $helm.valuesObjects ) .) ) ) }}
+    {{ $test := dict "helm" (dict "valuesObjects" (fromYaml (tpl (toYaml $helm.valuesObjects ) .root) ) ) }}
     {{ $sources = merge $test $sources }}
     {{- end }}
 
@@ -102,9 +125,11 @@ spec:
   {{- if ne $app nil }}
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
-{{ $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $app ) ) -}}
-{{ $ValuesTpl := fromYaml (include "ValuesTpl" (dict "app" $app ) ) -}}
-{{- $Application := merge $ValuesTpl $app $Application   -}}
+{{- $appEvaluated := fromYaml (include "tplLeafs" (list (toYaml $app) $)) }}
+{{ $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $app "Values" . ) ) -}}
+{{/* $ValuesTpl := fromYaml (include "ValuesTpl" (dict "app" $app "root" $ ) ) */ -}}
+{{ $ValuesTpl := fromYaml (include "tplLeafs" (list $app $)) }}
+{{- $Application := merge $appEvaluated $app $Application   -}}
 {{ toYaml $Application }}
 
     {{- end }}

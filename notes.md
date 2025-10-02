@@ -28,3 +28,31 @@
   {{- end }}
   {{ $appsDictTpl = merge $appsDictTpl $newApps }}
 {{- end }}
+
+
+
+
+
+
+{{- /* Fonction récursive pour appliquer tpl sur chaque feuille string */ -}}
+{{- define "tplLeafs" -}}
+  {{- $in := index . 0 -}}
+  {{- $ctx := index . 1 -}}
+  {{- if (kindIs "map" $in) -}}
+    {{- $out := dict -}}
+    {{- range $k, $v := $in -}}
+      {{- $_ := set $out $k (include "tplLeafs" (list $v $ctx)) -}}
+    {{- end -}}
+    {{- $out -}}
+  {{- else if (kindIs "slice" $in) -}}
+    {{- $out := list -}}
+    {{- range $v := $in -}}
+      {{- $out = append $out (include "tplLeafs" (list $v $ctx)) -}}
+    {{- end -}}
+    {{- $out -}}
+  {{- else if (kindIs "string" $in) -}}
+    {{- tpl $in $ctx -}}
+  {{- else -}}
+    {{- $in -}}
+  {{- end -}}
+{{- end }}
