@@ -3,7 +3,7 @@ apps_values:
     domain: ".kind"
     adminArgo: ""
     ingressClassName: "nginx"
-    targetRevision: '">0.0.0"' 
+    targetRevision: ">0.0.0"
 
 apps_dict_tpl:
   argocd-simple:
