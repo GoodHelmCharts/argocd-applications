@@ -1,11 +1,11 @@
-{{ define "Application" -}}
+{{- define "Application" -}}
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  {{ $baseMetadata := (($.Values).base).metadata }}
+  {{- $baseMetadata := (($.Values).base).metadata }}
   name: {{ print ($baseMetadata.prefix_name | default "" .appKey ) }}
-  namespace: {{ $baseMetadata.namespace | default "argocd"  }}
-{{ if .app.force}}
+  namespace: {{ $baseMetadata.namespace | default "argocd" }}
+{{- if .app.force }}
 operation:
   sync:
     syncStrategy:
@@ -13,19 +13,18 @@ operation:
         force: true
 {{- end }}
 spec:
-  {{ $baseSpec := (($.Values).base).spec }}
+  {{- $baseSpec := (($.Values).base).spec }}
   project: {{ $baseSpec.project | default "default" }}
   destination:
-    server: {{ ($baseSpec.destination).server | default ("https://kubernetes.default.svc")  }}
-    namespace: {{ ($baseSpec.destination).server | default (.app.metadata).name | default .appKey}}
+    server: {{ $baseSpec.destination.server | default "https://kubernetes.default.svc" }}
+    namespace: {{ $baseSpec.destination.namespace | default .app.metadata.name | default .appKey }}
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - "CreateNamespace=true"
-        
-{{ end }}
+{{- end }}
 
 {{- /* Fonction récursive pour appliquer tpl sur chaque feuille string */ -}}
 {{- define "tplLeafs" -}}
@@ -50,88 +49,44 @@ spec:
   {{- end -}}
 {{- end }}
 
-{{ define "ValuesTpl" -}}
-spec:
-  {{ $helm := (((.app).spec).source).helm }}
-  {{- if $helm }}
-  source:
-    helm:
-      {{- if $helm.valuesObject }}
-      valuesObject:
-        {{- tpl (toYaml $helm.valuesObject ) .root | nindent 8 }}
-      {{ end}}
-      {{- if $helm.values }}
-      values: |
-        {{- tpl ( $helm.values ) .root | nindent 8 }}
-      {{ end}}
-  {{ end}}
+{{- $tplApps := tpl (.Values.apps_tpl_string | default "null") . -}}
 
-
-  {{- if (((.app).spec).sources) }}
-  sources:
-    {{- range $key, $sources := .app.spec.sources }}
-    {{ $helm := $sources.helm }}
-    {{- if $helm.valuesObjects }}
-    {{ $test := dict "helm" (dict "valuesObjects" (fromYaml (tpl (toYaml $helm.valuesObjects ) .root) ) ) }}
-    {{ $sources = merge $test $sources }}
-    {{- end }}
-
-    {{- if $helm.values }}
-    {{ $test := dict "helm" (dict "values"  (tpl ($helm.values ) .) )  }}
-    {{ $sources = merge $test $sources }}
-    {{- end }}
-
-    - {{ toYaml $sources | nindent 6 }}
-    {{ end}}
-  {{ end}}
-{{ end }}
-
-
-{{- $tplApps := ( tpl (.Values.apps_tpl_string | default "null" ) .)  -}}
-
-{{ $appsDictTpl := dict }}
+{{- $appsDictTpl := dict }}
 {{- range $parentKey, $dict := .Values.apps_dict_tpl }}
-  {{ $newApps := dict }}
+  {{- $newApps := dict }}
   {{- range $subKey, $subValue := $dict }}
-    {{ $hashedKey := printf "%s" $subKey }}
-    {{- if or $.Values.apps_dict_tpl_gen_id  $subValue.gen_id }}
-    {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
+    {{- $hashedKey := $subKey }}
+    {{- if or $.Values.apps_dict_tpl_gen_id $subValue.gen_id }}
+      {{- $hashedKey = printf "%s-%s" $subKey (adler32sum $parentKey) }}
     {{- end }}
-    {{ $newApps = merge $newApps (dict $hashedKey $subValue) }}
-    
-
+    {{- $newApps = merge $newApps (dict $hashedKey $subValue) }}
   {{- end }}
-  {{ $appsDictTpl = merge $appsDictTpl $newApps }}
+  {{- $appsDictTpl = merge $appsDictTpl $newApps }}
 {{- end }}
 
-
-{{ $appsDict := dict }}
+{{- $appsDict := dict }}
 {{- range $parentKey, $dict := .Values.apps_dict }}
-  {{ $newApps := dict }}
+  {{- $newApps := dict }}
   {{- range $subKey, $subValue := $dict }}
-    {{- if or $.Values.apps_dict_tpl_gen_id  $subValue.gen_id }}
-    {{ $hashedKey := printf "%s-%s" $subKey (adler32sum $parentKey) }}
+    {{- $hashedKey := $subKey }}
+    {{- if or $.Values.apps_dict_tpl_gen_id $subValue.gen_id }}
+      {{- $hashedKey = printf "%s-%s" $subKey (adler32sum $parentKey) }}
     {{- end }}
-    {{ $hashedKey := printf "%s" $subKey }}
-    {{ $newApps = merge $newApps (dict $hashedKey $subValue) }}
+    {{- $newApps = merge $newApps (dict $hashedKey $subValue) }}
   {{- end }}
-  {{ $appsDict = merge $appsDict $newApps }}
+  {{- $appsDict = merge $appsDict $newApps }}
 {{- end }}
 
+{{- $appsMerged := merge (.Values.apps | default dict) $appsDict (fromYaml $tplApps) $appsDictTpl -}}
 
-
-{{- $appsMerged := merge (.Values.apps | default (dict) ) ($appsDict) (fromYaml $tplApps ) ($appsDictTpl )  -}}
-{{ range $appKey, $app := $appsMerged }}
+{{- range $appKey, $app := $appsMerged }}
   {{- if ne $app nil }}
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
 {{- $appEvaluated := fromYaml (include "tplLeafs" (list (toYaml $app) $)) }}
-{{ $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $app "Values" . ) ) -}}
-{{/* $ValuesTpl := fromYaml (include "ValuesTpl" (dict "app" $app "root" $ ) ) */ -}}
-{{ $ValuesTpl := fromYaml (include "tplLeafs" (list $app $)) }}
-{{- $Application := merge $appEvaluated $app $Application   -}}
+{{- $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $appEvaluated "Values" .)) -}}
+{{- $Application := merge $appEvaluated $Application -}}
 {{ toYaml $Application }}
-
     {{- end }}
   {{- end }}
 {{- end }}
