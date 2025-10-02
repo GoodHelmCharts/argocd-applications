@@ -11,6 +11,7 @@ operation:
     syncStrategy:
       hook:
         force: true
+{{- $app := .app | omit "force"  }}
 {{- end }}
 spec:
   {{- $baseSpec := (($.Values).base).spec }}
