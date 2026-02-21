@@ -16,8 +16,8 @@ spec:
       prune: true
       selfHeal: true
     syncOptions:
-      - "CreateNamespace=true"
-      - "ServerSideApply=true"
+      - CreateNamespace=true
+      - ServerSideApply=true
 {{- end }}
 
 {{- /* Fonction récursive pour appliquer tpl sur chaque feuille string */ -}}
