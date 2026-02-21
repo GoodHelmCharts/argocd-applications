@@ -10,7 +10,7 @@ spec:
   project: {{ $baseSpec.project | default "default" }}
   destination:
     server: {{ $baseSpec.destination.server | default "https://kubernetes.default.svc" }}
-    namespace: {{ $baseSpec.destination.namespace | default .app.metadata.name | default .appKey }}
+    namespace: {{ $baseSpec.destination.namespace | default (dig "app" "metadata" "name" "" .) | default .appKey }}
   syncPolicy:
     automated:
       prune: true
