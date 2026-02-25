@@ -7,17 +7,20 @@ metadata:
   namespace: {{ $baseMetadata.namespace | default "argocd" }}
 spec:
   {{- $baseSpec := (($.Values).base).spec }}
-  project: {{ $baseSpec.project | default "default" }}
-  destination:
-    server: {{ $baseSpec.destination.server | default "https://kubernetes.default.svc" }}
-    namespace: {{ $baseSpec.destination.namespace | default (dig "app" "metadata" "name" "" .) | default .appKey }}
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - ServerSideApply=true
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  template:
+    project: {{ $baseSpec.project | default "default" }}
+    destination:
+      server: {{ $baseSpec.destination.server | default "https://kubernetes.default.svc" }}
+      namespace: {{ $baseSpec.destination.namespace | default (dig "app" "metadata" "name" "" .) | default .appKey }}
+    syncPolicy:
+      automated:
+        prune: true
+        selfHeal: true
+      syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true
 {{- end }}
 
 {{- /* Fonction récursive pour appliquer tpl sur chaque feuille string */ -}}
@@ -38,6 +41,39 @@ spec:
     {{- $out -}}
   {{- else if (kindIs "string" $in) -}}
     {{- tpl $in $ctx -}}
+  {{- else -}}
+    {{- $in -}}
+  {{- end -}}
+{{- end }}
+
+{{- /* Fonction récursive pour appliquer tpl sur chaque feuille string */ -}}
+{{- define "tplLeafs_excludeTemplate" -}}
+  {{- $in := index . 0 -}}
+  {{- $ctx := index . 1 -}}
+  {{- $path := index . 2 | default (list) -}}
+
+  {{- if kindIs "map" $in -}}
+    {{- $out := dict -}}
+    {{- range $k, $v := $in -}}
+      {{- $p := append $path $k -}}
+      {{- $_ := set $out $k (ternary
+            $v
+            (include "tplLeafs_excludeTemplate" (list $v $ctx $p))
+            (and (eq (len $p) 2) (eq (index $p 0) "spec") (eq (index $p 1) "template"))
+      ) -}}
+    {{- end -}}
+    {{- $out -}}
+
+  {{- else if kindIs "slice" $in -}}
+    {{- $out := list -}}
+    {{- range $v := $in -}}
+      {{- $out = append $out (include "tplLeafs_excludeTemplate" (list $v $ctx $path)) -}}
+    {{- end -}}
+    {{- $out -}}
+
+  {{- else if kindIs "string" $in -}}
+    {{- tpl $in $ctx -}}
+
   {{- else -}}
     {{- $in -}}
   {{- end -}}
@@ -77,7 +113,7 @@ spec:
   {{- if ne $app nil }}
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
-{{- $appEvaluated := fromYaml (include "tplLeafs" (list (toYaml $app) $)) }}
+{{- $appEvaluated := fromYaml (include "tplLeafs_excludeTemplate" (list (toYaml $app) $)) }}
 {{- $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $appEvaluated "Values" .)) -}}
 {{- $Application := merge $appEvaluated $Application -}}
 {{ toYaml $Application }}
