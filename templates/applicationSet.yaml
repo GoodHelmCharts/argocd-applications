@@ -1,0 +1,86 @@
+{{- define "Application" -}}
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  {{- $baseMetadata := (($.Values).base).metadata }}
+  name: {{ print ($baseMetadata.prefix_name | default "" .appKey ) }}
+  namespace: {{ $baseMetadata.namespace | default "argocd" }}
+spec:
+  {{- $baseSpec := (($.Values).base).spec }}
+  project: {{ $baseSpec.project | default "default" }}
+  destination:
+    server: {{ $baseSpec.destination.server | default "https://kubernetes.default.svc" }}
+    namespace: {{ $baseSpec.destination.namespace | default (dig "app" "metadata" "name" "" .) | default .appKey }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+{{- end }}
+
+{{- /* Fonction récursive pour appliquer tpl sur chaque feuille string */ -}}
+{{- define "tplLeafs" -}}
+  {{- $in := index . 0 -}}
+  {{- $ctx := index . 1 -}}
+  {{- if (kindIs "map" $in) -}}
+    {{- $out := dict -}}
+    {{- range $k, $v := $in -}}
+      {{- $_ := set $out $k (include "tplLeafs" (list $v $ctx)) -}}
+    {{- end -}}
+    {{- $out -}}
+  {{- else if (kindIs "slice" $in) -}}
+    {{- $out := list -}}
+    {{- range $v := $in -}}
+      {{- $out = append $out (include "tplLeafs" (list $v $ctx)) -}}
+    {{- end -}}
+    {{- $out -}}
+  {{- else if (kindIs "string" $in) -}}
+    {{- tpl $in $ctx -}}
+  {{- else -}}
+    {{- $in -}}
+  {{- end -}}
+{{- end }}
+
+{{- $tplApps := tpl (.Values.apps_tpl_string | default "null") . -}}
+
+{{- $appsDictTpl := dict }}
+{{- range $parentKey, $dict := .Values.apps_dict_tpl }}
+  {{- $newApps := dict }}
+  {{- range $subKey, $subValue := $dict }}
+    {{- $hashedKey := $subKey }}
+    {{- if or $.Values.apps_dict_tpl_gen_id $subValue.gen_id }}
+      {{- $hashedKey = printf "%s-%s" $subKey (adler32sum $parentKey) }}
+    {{- end }}
+    {{- $newApps = merge $newApps (dict $hashedKey $subValue) }}
+  {{- end }}
+  {{- $appsDictTpl = merge $appsDictTpl $newApps }}
+{{- end }}
+
+{{- $appsDict := dict }}
+{{- range $parentKey, $dict := .Values.apps_dict }}
+  {{- $newApps := dict }}
+  {{- range $subKey, $subValue := $dict }}
+    {{- $hashedKey := $subKey }}
+    {{- if or $.Values.apps_dict_tpl_gen_id $subValue.gen_id }}
+      {{- $hashedKey = printf "%s-%s" $subKey (adler32sum $parentKey) }}
+    {{- end }}
+    {{- $newApps = merge $newApps (dict $hashedKey $subValue) }}
+  {{- end }}
+  {{- $appsDict = merge $appsDict $newApps }}
+{{- end }}
+
+{{- $appsMerged := merge (.Values.apps | default dict) $appsDict (fromYaml $tplApps) $appsDictTpl -}}
+
+{{- range $appKey, $app := $appsMerged }}
+  {{- if ne $app nil }}
+    {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
+---
+{{- $appEvaluated := fromYaml (include "tplLeafs" (list (toYaml $app) $)) }}
+{{- $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $appEvaluated "Values" .)) -}}
+{{- $Application := merge $appEvaluated $Application -}}
+{{ toYaml $Application }}
+    {{- end }}
+  {{- end }}
+{{- end }}
