@@ -6,11 +6,13 @@ appsSet_dict_tpl:
           list1:
             elements:
               mariadb:
+                toto: a
               memcached: 
                 condition: "eq (int $.Values.memcached.pod.replicas.server) 1"
               memcached-mcrouter:
                 condition: "eq (int $.Values.memcached.pod.replicas.server) 3"
               rabbitmq:
+                toto: b
 
         template:
           metadata:
