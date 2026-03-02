@@ -6,13 +6,13 @@ appsSet_dict_tpl:
           list1:
             elements:
               mariadb: 
-                condition: "if or (eq (int $.Values.mariadb.pod.replicas.server) 3) (eq (int $.Values.mariadb.pod.replicas.server) 1)"
+                condition: false
               memcached: 
-                condition: "eq (int $.Values.memcached.pod.replicas.server) 1"
+                condition: false
               memcached-mcrouter:
-                condition: "eq (int $.Values.memcached.pod.replicas.server) 3"
+                condition: false
               rabbitmq:
-                condition: "if or (eq (int $.Values.rabbitmq.pod.replicas.server) 3) (eq (int $.Values.rabbitmq.pod.replicas.server) 1)"
+                condition: false
 
         template:
           metadata:
