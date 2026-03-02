@@ -160,7 +160,10 @@ spec:
   {{- if ne $app nil }}
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
-{{- $appEvaluated := fromYaml (include "tplLeafs_excludeTemplate" (list (toYaml $app) $)) }}
+{{- $templateBackup := $appEvaluated.spec.template -}}   # 1️⃣ mettre de côté
+{{- $_ := set $appEvaluated.spec "template" nil -}}
+{{- $appEvaluated := fromYaml (include "tplLeafs" (list (toYaml $app) $)) }}
+{{- $_ := set $appEvaluated.spec "template" $templateBackup -}}
 {{- $_ := set $appEvaluated.spec "generators"
       (fromYaml (include "transform.generators" $appEvaluated.spec)).generators
 -}}
