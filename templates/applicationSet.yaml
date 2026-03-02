@@ -126,7 +126,7 @@ spec:
   {{- end -}}
 {{- end }}
 
-{{- $tplApps := tpl (.Values.appsSet_dict_tpl | default "null") . -}}
+{{- $tplApps := tpl (.Values.appsSet_dict_tpl_string | default "null") . -}}
 
 {{- $appsDictTpl := dict }}
 {{- range $parentKey, $dict := .Values.appsSet_dict_tpl }}
