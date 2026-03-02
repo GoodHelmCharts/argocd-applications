@@ -1,4 +1,4 @@
-{{- define "Application" -}}
+{{- define "ApplicationSet" -}}
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
@@ -114,9 +114,9 @@ spec:
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
 {{- $appEvaluated := fromYaml (include "tplLeafs_excludeTemplate" (list (toYaml $app) $)) }}
-{{- $Application := fromYaml (include "Application" (dict "appKey" $appKey "app" $appEvaluated "Values" .)) -}}
-{{- $Application := merge $appEvaluated $Application -}}
-{{ toYaml $Application }}
+{{- $ApplicationSet := fromYaml (include "ApplicationSet" (dict "appKey" $appKey "app" $appEvaluated "Values" .)) -}}
+{{- $ApplicationSet := merge $appEvaluated $ApplicationSet -}}
+{{ toYaml $ApplicationSet }}
     {{- end }}
   {{- end }}
 {{- end }}
