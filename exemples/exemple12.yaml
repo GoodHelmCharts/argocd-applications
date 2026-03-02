@@ -8,6 +8,7 @@ spec:
     list1:
       elements:
         mariadb:
+        condition: "true"
 
 
   template:
