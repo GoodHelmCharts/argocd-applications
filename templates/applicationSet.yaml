@@ -126,14 +126,14 @@ spec:
   {{- end -}}
 {{- end }}
 
-{{- $tplApps := tpl (.Values.apps_tpl_string | default "null") . -}}
+{{- $tplApps := tpl (.Values.appsSet_dict_tpl | default "null") . -}}
 
 {{- $appsDictTpl := dict }}
-{{- range $parentKey, $dict := .Values.apps_dict_tpl }}
+{{- range $parentKey, $dict := .Values.appsSet_dict_tpl }}
   {{- $newApps := dict }}
   {{- range $subKey, $subValue := $dict }}
     {{- $hashedKey := $subKey }}
-    {{- if or $.Values.apps_dict_tpl_gen_id $subValue.gen_id }}
+    {{- if or $.Values.appsSet_dict_tpl_gen_id $subValue.gen_id }}
       {{- $hashedKey = printf "%s-%s" $subKey (adler32sum $parentKey) }}
     {{- end }}
     {{- $newApps = merge $newApps (dict $hashedKey $subValue) }}
@@ -142,11 +142,11 @@ spec:
 {{- end }}
 
 {{- $appsDict := dict }}
-{{- range $parentKey, $dict := .Values.apps_dict }}
+{{- range $parentKey, $dict := .Values.appsSet_dict }}
   {{- $newApps := dict }}
   {{- range $subKey, $subValue := $dict }}
     {{- $hashedKey := $subKey }}
-    {{- if or $.Values.apps_dict_tpl_gen_id $subValue.gen_id }}
+    {{- if or $.Values.appsSet_dict_tpl_gen_id $subValue.gen_id }}
       {{- $hashedKey = printf "%s-%s" $subKey (adler32sum $parentKey) }}
     {{- end }}
     {{- $newApps = merge $newApps (dict $hashedKey $subValue) }}
