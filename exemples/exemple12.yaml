@@ -9,6 +9,9 @@ appsSet_dict_tpl:
                 toto: a
               memcached: 
                 condition: "eq (int $.Values.memcached.pod.replicas.server) 1"
+                values:
+                values_tpl:
+                values_tpl_string:
               memcached-mcrouter:
                 condition: "eq (int $.Values.memcached.pod.replicas.server) 3"
               rabbitmq:
