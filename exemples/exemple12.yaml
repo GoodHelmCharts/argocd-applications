@@ -26,7 +26,7 @@ appsSet_dict_tpl:
                 helm:
                   # Surcharge des valeurs Helm
                   valuesFiles:
-                    - $templates/openstack/values/{{ .name }}.yaml
+                    - {{ .name }}/values.yaml
                     - $templates/values/default.yaml
                   values:
                     - test123: '{{ default "latest"}}'
