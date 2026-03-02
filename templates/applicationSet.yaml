@@ -43,7 +43,7 @@ spec:
         {{- range $k, $v := $cfg }}
           {{- $_ := set $item $k $v -}}
         {{- end }}
-        {{- if or (not $item.condition) (and $item.condition (eq "true" (tpl (printf "{{%s}}" $item.condition) $))) }}
+        {{- if or (not $cfg.condition) (and $cfg.condition (eq "true" (tpl (printf "{{%s}}" $cfg.condition) $))) }}
         {{- $elements = append $elements $item -}}
         {{- end }}
       {{- end }}
