@@ -1,44 +1,40 @@
+appsSet_dict_tpl:
+  openstack-simple:
+    openstack:
+      spec:
+        generators:
+          list1:
+            elements:
+              mariadb:
+              memcached: 
+                condition: "eq (int $.Values.memcached.pod.replicas.server) 1"
+              memcached-mcrouter:
+                condition: "eq (int $.Values.memcached.pod.replicas.server) 3"
+              rabbitmq:
 
-apiVersion: argoproj.io/v1alpha1
-kind: ApplicationSet
-metadata:
-  name: argocd
-spec:
-  generators:
-    list1:
-      elements:
-        mariadb:
-          condition: "true"
+        template:
+          metadata:
+            name: '{{element}}'
+          spec:
+            project: default
+            sources:
+              - repoURL: https://github.com/openstack/openstack-helm.git
+                targetRevision: '{{targetRevision | default "2025.2.0"}}'
+                path: '{{ element }}'
+                helm:
+                  # Surcharge des valeurs Helm
+                  valuesFiles:
+                    - $templates/openstack/values/values_overrides/2023.2-ubuntu_jammy.yaml 
+                    - $templates/openstack/values/{{ element }}.yaml
+                    - $templates/values/default.yaml
+                  values:
+                    - test123: '{{ default "latest"}}'
 
+              # Repo contenant les values.yaml
+              - repoURL: https://github.com/GoodInfras/argocd-templates.git
+                targetRevision: main
+                ref: templates
 
-  template:
-    metadata:
-      name: '{{element}}'
-    spec:
-      project: default
-      sources:
-        - repoURL: https://github.com/openstack/openstack-helm.git
-          targetRevision: '{{targetRevision | default "2025.2.0"}}'
-          path: '{{ element }}'
-          helm:
-            # Surcharge des valeurs Helm
-            valuesFiles:
-              - $templates/openstack/values/values_overrides/2023.2-ubuntu_jammy.yaml 
-              - $templates/openstack/values/{{ element }}.yaml
-              - $templates/values/default.yaml
-            values:
-              - test123: '{{ default "latest"}}'
-
-        # Repo contenant les values.yaml
-        - repoURL: https://github.com/GoodInfras/argocd-templates.git
-          targetRevision: main
-          ref: templates
-
-      destination:
-        server: https://kubernetes.default.svc
-        namespace: '{{namespace | default openstack}}'
-
-      syncPolicy:
-        automated:
-          prune: true
-          selfHeal: true
+            destination:
+              server: https://kubernetes.default.svc
+              namespace: '{{namespace | default openstack}}'
