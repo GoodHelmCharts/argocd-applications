@@ -23,6 +23,53 @@ spec:
         - ServerSideApply=true
 {{- end }}
 
+
+{{- define "transform.generators" -}}
+{{- $spec := . -}}
+
+{{- if and $spec.generators (kindIs "map" $spec.generators) }}
+
+  {{- $out := list -}}
+
+  {{- range $genName, $genValue := $spec.generators }}
+
+    {{- if and $genValue.elements (kindIs "map" $genValue.elements) }}
+
+      {{- $elements := list -}}
+
+      {{- range $name, $cfg := $genValue.elements }}
+        {{- $item := dict "name" $name -}}
+
+        {{- range $k, $v := $cfg }}
+          {{- $_ := set $item $k $v -}}
+        {{- end }}
+
+        {{- $elements = append $elements $item -}}
+      {{- end }}
+
+      {{- $out = append $out (dict "list" (dict "elements" $elements)) -}}
+
+    {{- end }}
+
+  {{- end }}
+
+  {{- /* Si transformation vide → fallback */ -}}
+  {{- if gt (len $out) 0 }}
+    {{- dict "generators" $out | toYaml -}}
+  {{- else }}
+    {{- dict "generators" $spec.generators | toYaml -}}
+  {{- end }}
+
+{{- else }}
+
+  {{- /* Déjà une liste ou absent → on ne touche à rien */ -}}
+  {{- dict "generators" $spec.generators | toYaml -}}
+
+{{- end }}
+
+{{- end }}
+
+
 {{- /* Fonction récursive pour appliquer tpl sur chaque feuille string */ -}}
 {{- define "tplLeafs" -}}
   {{- $in := index . 0 -}}
@@ -114,6 +161,9 @@ spec:
     {{- if or (not $app.condition) (and $app.condition (eq "true" (tpl (printf "{{%s}}" $app.condition) $))) }}
 ---
 {{- $appEvaluated := fromYaml (include "tplLeafs_excludeTemplate" (list (toYaml $app) $)) }}
+{{- $_ := set $appEvaluated.spec "generators"
+      (fromYaml (include "transform.generators" $appEvaluated.spec)).generators
+-}}
 {{- $ApplicationSet := fromYaml (include "ApplicationSet" (dict "appKey" $appKey "app" $appEvaluated "Values" .)) -}}
 {{- $ApplicationSet := merge $appEvaluated $ApplicationSet -}}
 {{ toYaml $ApplicationSet }}
