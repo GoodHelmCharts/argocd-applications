@@ -16,18 +16,17 @@ appsSet_dict_tpl:
 
         template:
           metadata:
-            name: '{{element}}'
+            name: '{{ .name }}'
           spec:
             project: default
             sources:
               - repoURL: https://github.com/openstack/openstack-helm.git
                 targetRevision: '{{targetRevision | default "2025.2.0"}}'
-                path: '{{ element }}'
+                path: '{{ .name }}'
                 helm:
                   # Surcharge des valeurs Helm
                   valuesFiles:
-                    - $templates/openstack/values/values_overrides/2023.2-ubuntu_jammy.yaml 
-                    - $templates/openstack/values/{{ element }}.yaml
+                    - $templates/openstack/values/{{ .name }}.yaml
                     - $templates/values/default.yaml
                   values:
                     - test123: '{{ default "latest"}}'
