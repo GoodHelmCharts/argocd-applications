@@ -43,8 +43,9 @@ spec:
         {{- range $k, $v := $cfg }}
           {{- $_ := set $item $k $v -}}
         {{- end }}
-
+        {{- if or (not $elements.condition) (and $elements.condition (eq "true" (tpl (printf "{{%s}}" $elements.condition) $))) }}
         {{- $elements = append $elements $item -}}
+        {{- end }}
       {{- end }}
 
       {{- $out = append $out (dict "list" (dict "elements" $elements)) -}}
