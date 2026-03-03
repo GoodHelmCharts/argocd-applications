@@ -1,0 +1,118 @@
+apps_values:
+  openstack:  
+    _app:
+      pod:
+        - &replicas
+          replicas:
+            server: &replicaset 1
+        - &lifecycle
+          lifecycle:
+          upgrades:
+            deployments:
+              rolling_update:
+                max_unavailable: 2
+     
+      endpoints:
+        - &cluster_domain_suffix
+          cluster_domain_suffix: cluster.local.
+        - &oslo_db
+          oslo_db: &ns
+            namespace: {{ .Values.namespace | default("openstack")}}
+        - &oslo_cache
+          oslo_db:
+            <<: *ns
+        - &oslo_messaging
+          oslo_messaging:
+            <<: *ns
+        - &identity
+          identity:
+            <<: *ns
+      labels:
+        label-openstack: 
+          node_selector_key: openstack-control-plane
+          node_selector_value: enabled
+        label-kind: &label
+          node_selector_key: kubernetes.io/arch
+          node_selector_value: amd64   
+      volume:
+        - &volume:
+          enabled: true      
+          class_name: "standard"
+    
+    
+    
+    mariadb:
+      helm3_hook: false
+      endpoints:
+        <<: *cluster_domain_suffix
+      pod: 
+        <<: *&replicas
+        
+      #manifests: {configmap_ingress_conf: false, deployment_error: false, deployment_ingress: false, service_ingress: false, deployment_error: false}
+      volume:
+        <<: *volume
+    
+      labels:
+        server:
+          <<: *label
+        prometheus_mysql_exporter:
+          <<: *label
+        job:
+          <<: *label
+        test:
+          <<: *label
+        controller:
+          <<: *label
+    
+    
+    memcached:
+      endpoints:
+        <<: *cluster_domain_suffix
+      pod:
+        <<: *replicas
+    
+    rabbitmq:
+      endpoints:
+        <<: *cluster_domain_suffix
+      pod:
+        <<: *replicas
+      #manifests: {ingress_api: false, ingress_management: false, service_ingress_management: false}
+    
+    keystone:
+      helm3_hook: false
+      endpoints:
+        <<: *cluster_domain_suffix
+        <<: *oslo_db
+        <<: *oslo_cache
+        <<: *oslo_messaging
+        <<: *identity
+      pod:
+        replicas:
+          api: *number
+        <<: *lifecycle
+    
+    horizon:
+      helm3_hook: false
+      endpoints:
+        <<: *cluster_domain_suffix
+      pod:
+        <<: *replicas
+        <<: *lifecycle
+    
+    glance:
+      helm3_hook: false
+      endpoints:
+        <<: *cluster_domain_suffix
+      pod:
+        replicas:
+          api: 1
+    
+    cinder:
+      helm3_hook: false
+      endpoints:
+        <<: *cluster_domain_suffix
+      pod:
+        <<: *lifecycle
+        replicas:
+          api: *number
+          scheduler: *number
