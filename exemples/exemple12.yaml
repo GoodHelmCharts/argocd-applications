@@ -1,8 +1,9 @@
 apps_values:
-  mariadb:
-  memcached:
-  memcached-mcrouter:
-  rabbitmq:
+  openstack:
+    mariadb:
+    memcached:
+    memcached-mcrouter:
+    rabbitmq:
   
 appsSet_dict_tpl:
   openstack-simple:
@@ -14,12 +15,12 @@ appsSet_dict_tpl:
               mariadb:
                 toto: a
               memcached: 
-                condition: "eq (int $.Values.memcached.pod.replicas.server) 1"
-                values: {{ .Values.memcached }} | default (dict) 
-                values_tpl: {{ tpl ({{ .Values.memcached_tpl }} | toYaml) .) | default (dict) }}
-                values_tpl_string: {{  tpl ({{ .Values.memcached_tpl_string }} | default (dict | toYaml)  ) .) | default (dict) }}
+                condition: "eq (int $.Values.apps_values.openstack.memcached.pod.replicas.server) 1"
+                values: {{ .Values.apps_values.openstack.memcached }} | default (dict) 
+                values_tpl: {{ tpl ({{ .Values.apps_values.openstack.memcached_tpl }} | toYaml) .) | default (dict) }}
+                values_tpl_string: {{  tpl ({{ .Values.apps_values.openstack.memcached_tpl_string }} | default (dict | toYaml)  ) .) | default (dict) }}
               memcached-mcrouter:
-                condition: "eq (int $.Values.memcached.pod.replicas.server) 3"
+                condition: "eq (int $.Values.apps_values.openstack.memcached.pod.replicas.server) 3"
               rabbitmq:
                 toto: b
 
