@@ -9,7 +9,7 @@ appsSet_dict_tpl:
                 toto: a
               memcached: 
                 condition: "eq (int $.Values.memcached.pod.replicas.server) 1"
-                values: {{ .Values.memcached }}
+                values: {{ .Values.memcached }} | default (dict) 
                 values_tpl: {{ tpl ({{ .Values.memcached_tpl }} | toYaml) .) | default (dict) }}
                 values_tpl_string: {{  tpl ({{ .Values.memcached_tpl_string }} | default (dict | toYaml)  ) .) | default (dict) }}
               memcached-mcrouter:
