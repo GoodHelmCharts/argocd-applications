@@ -31,9 +31,13 @@ appsSet_dict_tpl:
                   valuesFiles:
                     - {{ .name }}/values.yaml
                     - $templates/values/default.yaml
-                  values:
-                    - test123: '{{ default "latest"}}'
+                  values: |
+                    {{- $tpl := ( tpl ({{ .values_tpl }} | toYaml) .) | default (dict) -}}
+                    {{- $tpl_string := ( tpl ({{ values_tpl_string }} | default (dict | toYaml)  ) .) | default (dict) -}}               
+                    {{- $merged := merge ({{ values }} | default (dict) ) (fromYaml $tpl ) (fromYaml $tpl_string) -}}
+                    {{ $merged | toYaml  }}
 
+                    
               # Repo contenant les values.yaml
               - repoURL: https://github.com/GoodInfras/argocd-templates.git
                 targetRevision: main
