@@ -1,3 +1,9 @@
+apps_values:
+  mariadb:
+  memcached:
+  memcached-mcrouter:
+  rabbitmq:
+  
 appsSet_dict_tpl:
   openstack-simple:
     openstack:
