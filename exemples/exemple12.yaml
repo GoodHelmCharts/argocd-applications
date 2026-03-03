@@ -1,10 +1,3 @@
-apps_values:
-  openstack:
-    mariadb:
-    memcached:
-    memcached-mcrouter:
-    rabbitmq:
-  
 appsSet_dict_tpl:
   openstack-simple:
     openstack:
@@ -53,3 +46,10 @@ appsSet_dict_tpl:
             destination:
               server: https://kubernetes.default.svc
               namespace: '{{namespace | default openstack}}'
+
+apps_values:
+  openstack:
+    mariadb:
+    memcached:
+    memcached-mcrouter:
+    rabbitmq:              
